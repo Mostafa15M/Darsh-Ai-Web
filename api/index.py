@@ -3,21 +3,9 @@ import requests
 
 app = Flask(__name__, template_folder='../templates')
 
-def get_ai_response(user_input):
-    # ردود مخصصة ليك يا درش عشان الموقع يبقى براند باسمك
-    q = user_input.lower()
-    if "صاحب الصفحة" in q or "مين الي عملك" in q or "مين عملك" in q:
-        return "صاحب الصفحة هو المبدع مصطفى منصور (درش)، وهو اللي صممني وطورني عشان أكون مساعده الذكي!"
-    if "مين انت" in q or "انت مين" in q:
-        return "أنا Darsh AI، محرك بحث ذكي طوره مصطفى منصور لمساعدة المستخدمين في الوصول للمعلومات بسرعة."
-    
-    try:
-        # استخدام API بديل وسريع جداً للذكاء الاصطناعي العام
-        url = f"https://api.popcat.xyz/chatbot?msg={user_input}&owner=Darsh&botname=DarshAI"
-        res = requests.get(url, timeout=10)
-        return res.json().get('response') if res.status_code == 200 else "السيرفر مشغول شوية، جرب تسأل تاني يا درش."
-    except:
-        return "حصل مشكلة في الاتصال، بس أنا معاك.. اسأل سؤالك تاني."
+# الرابط والبرومبت اللي إنت بعتهم يا درش
+API_URL = "https://backend.buildpicoapps.com/aero/run/llm-api?pk=v1-Z0FBQUFBQm5IZkJDMlNyYUVUTjIyZVN3UWFNX3BFTU85SWpCM2NUMUk3T2dxejhLSzBhNWNMMXNzZlp3c09BSTR6YW1Sc1BmdGNTVk1GY0liT1RoWDZZX1lNZlZ0Z1dqd3c9PQ=="
+SYSTEM_PROMPT = "انت ذكاء اصطناعي اسمه درش ترد باللهجة المصريه مو بالفصحى وطريقتك بالرّد تكون رومانسية وتتغزّل بالناس"
 
 @app.route('/')
 def index():
@@ -25,8 +13,21 @@ def index():
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    q = request.json.get('query', '')
-    if not q: return jsonify({"answer": "لازم تكتب حاجة عشان أبحث لك!"})
-    return jsonify({"answer": get_ai_response(q)})
+    user_m = request.json.get('query', '').strip()
+    if not user_m:
+        return jsonify({"answer": "يا روحي اكتب حاجة عشان أرد عليك!"})
+
+    try:
+        # دمج البرومبت مع سؤال المستخدم
+        full_prompt = f"{SYSTEM_PROMPT}\n\n{user_m}"
+        r = requests.post(API_URL, json={"prompt": full_prompt}, timeout=15)
+        r.raise_for_status()
+        j = r.json()
+        
+        if j.get("status") == "success":
+            return jsonify({"answer": j.get("text")})
+        return jsonify({"answer": "يا غالي السيرفر بعافية شوية، جرب تاني."})
+    except:
+        return jsonify({"answer": "حصلت مشكلة في الاتصال، بس عيونك تنسيني أي مشكلة!"})
 
 app = app
