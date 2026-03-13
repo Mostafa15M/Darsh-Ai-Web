@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Darsh AI | Future</title>
+    <title>Darsh AI | Next Gen</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background: #020617; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-        .cyber-glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .cyber-glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); }
         .darsh-title {
             font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 10vw, 5rem);
             background: linear-gradient(90deg, #60a5fa, #a78bfa, #3b82f6, #60a5fa);
@@ -17,34 +17,42 @@
             animation: shine 4s linear infinite;
         }
         @keyframes shine { to { background-position: 200% center; } }
-        .input-glow { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .btn-future { background: linear-gradient(45deg, #2563eb, #7c3aed); }
+        .input-glow { background: rgba(2, 6, 23, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-future { background: linear-gradient(45deg, #2563eb, #7c3aed); transition: all 0.3s ease; }
+        .btn-future:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4); }
+        .orbit-spinner { width: 50px; height: 50px; border-radius: 50%; perspective: 800px; margin: 0 auto; }
+        .orbit { position: absolute; width: 100%; height: 100%; border-radius: 50%; border-bottom: 3px solid #60a5fa; animation: rotate 1s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <canvas id="starfield"></canvas>
-    <div class="cyber-glass w-full max-w-2xl p-6 sm:p-10 rounded-[2rem] z-10">
-        <header class="text-center mb-10">
+    <div class="cyber-glass w-full max-w-2xl p-6 sm:p-10 rounded-[2rem] relative z-10">
+        <header class="text-center mb-8">
             <h1 class="darsh-title">DARSH AI</h1>
-            <p class="text-[10px] tracking-[0.4em] text-blue-400">NEURAL LINK ACTIVE</p>
+            <p class="text-[10px] tracking-widest text-blue-400">NEURAL LINK ACTIVE</p>
         </header>
+
         <form id="mainForm" class="space-y-6">
-            <input type="file" id="imageInput" accept="image/*" class="w-full input-glow p-3 rounded-xl text-xs file:bg-blue-600 file:text-white file:border-none file:rounded-md" required>
-            <textarea id="promptInput" rows="3" placeholder="Describe motion..." class="w-full input-glow rounded-xl p-4 text-sm focus:outline-none" required></textarea>
+            <input type="file" id="imageInput" accept="image/*" class="w-full input-glow p-3 rounded-xl text-xs file:bg-blue-600 file:text-white file:border-none cursor-pointer" required>
+            <textarea id="promptInput" rows="3" placeholder="Describe the cinematic motion..." class="w-full input-glow rounded-xl p-4 text-sm focus:outline-none" required></textarea>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <select id="modelSelect" class="w-full input-glow rounded-xl p-4 text-sm">
-                    <option value="3-38">Seedance 1.5 Pro</option>
-                    <option value="3-11">Google Veo 3.1</option>
-                </select>
-                <button type="submit" class="btn-future font-bold rounded-xl p-4">GENERATE ✨</button>
+                <select id="modelSelect" class="w-full input-glow rounded-xl p-3 text-sm"><option value="3-38">Seedance 1.5 Pro</option><option value="3-11">Google Veo 3.1</option></select>
+                <button type="submit" class="btn-future font-bold rounded-xl p-3">GENERATE ✨</button>
             </div>
         </form>
-        <div id="loader" class="hidden py-10 text-center animate-pulse text-blue-300 text-xs tracking-widest">COMPUTING...</div>
-        <div id="resultArea" class="hidden mt-8 space-y-4">
+
+        <div id="loader" class="hidden py-12 text-center">
+            <div class="orbit-spinner mb-6"><div class="orbit"></div></div>
+            <p id="statusMsg" class="text-[10px] tracking-widest text-blue-300 uppercase animate-pulse">Initializing...</p>
+        </div>
+
+        <div id="resultArea" class="hidden mt-8 space-y-6">
             <video id="videoOutput" controls class="w-full rounded-2xl bg-black shadow-2xl"></video>
-            <button onclick="location.reload()" class="w-full text-[10px] text-slate-500 uppercase">New Session</button>
+            <button onclick="location.reload()" class="w-full text-[10px] text-slate-500 uppercase tracking-widest">New Session</button>
         </div>
     </div>
+
     <script>
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
@@ -52,32 +60,42 @@
         function initStars() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             stars = [];
-            for (let i = 0; i < 200; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.5, speed: Math.random()*0.15 });
+            let count = window.innerWidth < 768 ? 50 : 120; // نجوم خفيفة جداً
+            for (let i = 0; i < count; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.2, speed: Math.random()*0.08 });
         }
         function drawStars() {
-            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='white';
+            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='rgba(255,255,255,0.6)';
             stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x,s.y,s.size,0,Math.PI*2); ctx.fill(); s.y+=s.speed; if(s.y>canvas.height) s.y=0; });
             requestAnimationFrame(drawStars);
         }
         initStars(); drawStars();
 
         const form = document.getElementById('mainForm');
+        const statusMsg = document.getElementById('statusMsg');
+        const msgs = ["DREAMING FRAMES...", "LIGHTING SCENE...", "ALMOST READY...", "FINALIZING..."];
+
         form.onsubmit = async (e) => {
             e.preventDefault();
             form.classList.add('hidden'); document.getElementById('loader').classList.remove('hidden');
+            statusMsg.innerText = "UPLOADING TO NEURAL NETWORK...";
+            
             const fd = new FormData();
             fd.append('image', document.getElementById('imageInput').files[0]);
             fd.append('prompt', document.getElementById('promptInput').value);
             fd.append('model', document.getElementById('modelSelect').value);
+
             await fetch('/generate', { method: 'POST', body: fd });
+            
             const poll = setInterval(async () => {
                 const res = await fetch('/status');
                 const data = await res.json();
-                if(data.url) {
+                if(data.status === "success") {
                     clearInterval(poll);
                     document.getElementById('loader').classList.add('hidden');
                     document.getElementById('resultArea').classList.remove('hidden');
                     document.getElementById('videoOutput').src = data.url;
+                } else {
+                    statusMsg.innerText = msgs[Math.floor(Math.random()*msgs.length)];
                 }
             }, 8000);
         };
