@@ -15,29 +15,27 @@ class DarshSearch:
 
     def search(self, query):
         try:
-            params = {"q": query, "max_results": 15}
-            res = requests.get(self.api_url, params=params, headers=self.headers, timeout=25)
+            # زيادة وقت الانتظار لـ 30 ثانية عشان نلحق الرد
+            params = {"q": query, "max_results": 5}
+            res = requests.get(self.api_url, params=params, headers=self.headers, timeout=30)
             if res.status_code == 200:
                 data = res.json()
-                # فلترة الرد عشان ناخد الخلاصة بس
-                return data.get('answer') or data.get('result') or "للأسف ملقيتش إجابة دقيقة للسؤال ده، جرب تسأل بطريقة تانية."
-            return "السيرفر مشغول حالياً، جرب كمان شوية يا درش."
+                # محاولة استخراج الإجابة بأكثر من طريقة
+                ans = data.get('answer') or data.get('result')
+                if ans: return ans
+            return "دقيقة واحدة يا درش، بحاول أجمع لك أدق معلومات..."
         except:
-            return "حصل مشكلة في الاتصال، اتأكد من النت عندك."
+            return "السيرفر عليه ضغط حالياً، بس أنا معاك.. اسأل تاني."
 
 engine = DarshSearch()
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def index(): return render_template('index.html')
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    user_query = request.json.get('query')
-    if not user_query:
-        return jsonify({"answer": "لازم تكتب سؤال عشان أقدر أبحث لك!"})
-    
-    response_text = engine.search(user_query)
-    return jsonify({"answer": response_text})
+    q = request.json.get('query')
+    if not q: return jsonify({"answer": "اكتب أي حاجة في بالك!"})
+    return jsonify({"answer": engine.search(q)})
 
 app = app
