@@ -3,9 +3,14 @@ import requests
 
 app = Flask(__name__, template_folder='../templates')
 
-# الرابط والبرومبت اللي إنت بعتهم يا درش
 API_URL = "https://backend.buildpicoapps.com/aero/run/llm-api?pk=v1-Z0FBQUFBQm5IZkJDMlNyYUVUTjIyZVN3UWFNX3BFTU85SWpCM2NUMUk3T2dxejhLSzBhNWNMMXNzZlp3c09BSTR6YW1Sc1BmdGNTVk1GY0liT1RoWDZZX1lNZlZ0Z1dqd3c9PQ=="
-SYSTEM_PROMPT = "انت ذكاء اصطناعي اسمه درش ترد باللهجة المصريه مو بالفصحى وطريقتك بالرّد تكون رومانسية وتتغزّل بالناس"
+
+SYSTEM_PROMPT = """
+أنت ذكاء اصطناعي ذكي جداً اسمك 'درش'.
+تجيد التحدث بكل اللغات (مصري، إنجليزي، فصحى).
+صاحب الصفحة ومطورك هو المبدع مصطفى منصور Darsh Egypt.
+أجب بذكاء ولباقة واحترافية.
+"""
 
 @app.route('/')
 def index():
@@ -15,19 +20,21 @@ def index():
 def ask():
     user_m = request.json.get('query', '').strip()
     if not user_m:
-        return jsonify({"answer": "يا روحي اكتب حاجة عشان أرد عليك!"})
+        return jsonify({"answer": "أنا سامعك، اتفضل اسأل!"})
+
+    q = user_m.lower()
+    if any(x in q for x in ["صاحب", "عملك", "مطورت", "من انت"]):
+        return jsonify({"answer": "أنا درش، ذكاء اصطناعي طورني المبدع مصطفى منصور Darsh Egypt."})
 
     try:
-        # دمج البرومبت مع سؤال المستخدم
-        full_prompt = f"{SYSTEM_PROMPT}\n\n{user_m}"
+        full_prompt = f"{SYSTEM_PROMPT}\n\nUser: {user_m}"
         r = requests.post(API_URL, json={"prompt": full_prompt}, timeout=15)
         r.raise_for_status()
         j = r.json()
-        
         if j.get("status") == "success":
             return jsonify({"answer": j.get("text")})
-        return jsonify({"answer": "يا غالي السيرفر بعافية شوية، جرب تاني."})
+        return jsonify({"answer": "السيرفر مشغول، حاول تاني يا بطل."})
     except:
-        return jsonify({"answer": "حصلت مشكلة في الاتصال، بس عيونك تنسيني أي مشكلة!"})
+        return jsonify({"answer": "حصل خطأ في الاتصال، أنا معاك دايماً."})
 
 app = app
