@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import requests, os, uuid, hashlib
 
-# تعديل المسار ليعمل على Vercel
 app = Flask(__name__, template_folder='../templates')
 
 class PixWithAI:
@@ -11,7 +10,7 @@ class PixWithAI:
         self.headers = {
             'origin': 'https://pixwith.ai',
             'referer': 'https://pixwith.ai/',
-            'user-agent': 'Mozilla/5.0',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'x-session-token': self.session_token
         }
 
@@ -38,16 +37,20 @@ class PixWithAI:
             return True
         except: return False
 
-    def get_latest(self):
+    def get_latest_status(self):
         try:
             r = requests.post(f"{self.base_url}/items/history", headers=self.headers, 
                               json={"tool_type": "3", "page": 0, "page_size": 1}).json()
             items = r.get("data", {}).get("items", [])
-            if items and items[0].get("status") == 2:
-                for res in items[0].get('result_urls', []):
-                    if not res.get('is_input'): return res.get('hd') or res.get('sd')
-            return None
-        except: return None
+            if items:
+                status = items[0].get("status")
+                if status == 2:
+                    for res in items[0].get('result_urls', []):
+                        if not res.get('is_input'):
+                            return {"status": "success", "url": res.get('hd') or res.get('sd')}
+                return {"status": "processing"}
+            return {"status": "idle"}
+        except: return {"status": "error"}
 
 pix = PixWithAI()
 
@@ -62,13 +65,12 @@ def generate():
     model = request.form.get('model')
     path = f"/tmp/{uuid.uuid4()}.jpg"
     img.save(path)
-    pix.process_all(path, prompt, model)
+    success = pix.process_all(path, prompt, model)
     if os.path.exists(path): os.remove(path)
-    return jsonify({"status": "processing"})
+    return jsonify({"status": "started" if success else "error"})
 
 @app.route('/status')
 def status():
-    return jsonify({"url": pix.get_latest()})
+    return jsonify(pix.get_latest_status())
 
-# مهم جداً لـ Vercel
 app = app
