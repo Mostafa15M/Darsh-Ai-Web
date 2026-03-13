@@ -2,143 +2,185 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Darsh AI | V3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Darsh AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #020617; color: white; font-family: 'Cairo', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        header { background: #0f172a; border-bottom: 1px solid #1e3a8a; padding: 15px; display: flex; justify-content: center; align-items: center; position: relative; }
-        .logo { font-family: 'Orbitron'; font-size: 22px; color: #3b82f6; text-decoration: none; letter-spacing: 2px; }
-        .tg-link { position: absolute; left: 20px; color: #0088cc; font-size: 24px; }
+        /* منع الحركة الجانبية تماماً */
+        html, body { 
+            background: #020617; 
+            color: white; 
+            font-family: 'Cairo', sans-serif; 
+            height: 100vh; 
+            width: 100%;
+            margin: 0; 
+            padding: 0;
+            overflow-x: hidden; /* القفل الجانبي */
+            position: fixed; /* منع السحب في بعض المتصفحات */
+        }
         
-        .chat-container { flex: 1; overflow-y: auto; padding: 20px 15px 180px 15px; scroll-behavior: smooth; }
-        .bubble { max-width: 85%; margin-bottom: 20px; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.6; position: relative; }
+        body { display: flex; flex-direction: column; position: relative; }
+
+        header { 
+            background: #0f172a; 
+            border-bottom: 1px solid #1e3a8a; 
+            padding: 12px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            position: relative;
+            width: 100%;
+            z-index: 50;
+        }
+        
+        .logo { font-family: 'Orbitron'; font-size: 20px; color: #3b82f6; text-decoration: none; font-weight: bold; }
+        .tg-link { position: absolute; left: 15px; color: #0088cc; font-size: 22px; }
+        
+        .chat-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            padding: 15px 15px 160px 15px; 
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bubble { max-width: 85%; margin-bottom: 15px; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
         .user { background: #2563eb; margin-right: auto; border-bottom-right-radius: 4px; }
         .ai { background: #1e293b; border: 1px solid #334155; margin-left: auto; border-bottom-left-radius: 4px; }
 
-        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, #020617 30%); padding: 20px 15px 40px 15px; }
-        .input-box { max-width: 700px; margin: 0 auto; background: #0f172a; border: 2px solid #3b82f6; border-radius: 30px; display: flex; align-items: center; padding: 5px 15px; box-shadow: 0 0 20px rgba(59, 130, 246, 0.1); }
+        .footer-area { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: linear-gradient(transparent, #020617 25%); 
+            padding: 15px 15px 30px 15px; 
+            width: 100%;
+            z-index: 100;
+        }
+
+        .input-box { 
+            max-width: 700px; 
+            margin: 0 auto; 
+            background: #0f172a; 
+            border: 2px solid #3b82f6; 
+            border-radius: 25px; 
+            display: flex; 
+            align-items: center; 
+            padding: 5px 12px; 
+        }
         
         input[type="file"] { display: none; }
-        .icon-btn { color: #94a3b8; font-size: 20px; cursor: pointer; margin-left: 12px; transition: 0.3s; }
-        .icon-btn:hover { color: #3b82f6; }
+        .action-icon { color: #94a3b8; font-size: 18px; cursor: pointer; margin-left: 10px; }
         
-        #userInput { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-size: 15px; }
-        .send-btn { color: #3b82f6; font-size: 22px; margin-right: 10px; cursor: pointer; border: none; background: transparent; }
+        #textInput { flex: 1; background: transparent; border: none; color: white; padding: 8px; outline: none; font-size: 14px; }
+        .send-btn { color: #3b82f6; font-size: 20px; border: none; background: transparent; cursor: pointer; }
 
-        .img-preview { display: none; width: 45px; height: 45px; border-radius: 10px; margin-left: 10px; border: 1px solid #3b82f6; object-fit: cover; }
-        .ai img { border-radius: 15px; margin-top: 10px; width: 100%; border: 1px solid #3b82f6; }
+        .preview-box { display: none; width: 40px; height: 40px; border-radius: 8px; margin-left: 8px; border: 1px solid #3b82f6; object-fit: cover; }
+        .ai-img { border-radius: 12px; margin-top: 10px; width: 100%; border: 1px solid #3b82f6; }
         
-        /* تأثير الكتابة المستمرة */
-        .cursor { display: inline-block; width: 8px; height: 18px; background: #3b82f6; margin-right: 4px; animation: blink 0.7s infinite; vertical-align: middle; }
+        .writing::after { content: '|'; animation: blink 0.7s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
     <header>
         <a href="https://t.me/DarshEgypt" target="_blank" class="tg-link"><i class="fab fa-telegram"></i></a>
-        <a href="https://darshai.vercel.app/" class="logo">DARSH AI</a>
+        <span class="logo">DARSH AI</span>
     </header>
 
     <div id="chatBox" class="chat-container">
-        <div class="ai bubble">أهلاً يا مصطفى! "درش" الجديد جاهز.. اطلب رسمة أو اسأل أي سؤال وهرد عليك فوراً.</div>
+        <div class="ai bubble">أهلاً يا مصطفى! الشاشة دلوقتي ثابتة تماماً.. اسألني أي حاجة.</div>
     </div>
 
-    <div class="bottom-bar">
+    <div class="footer-area">
         <form id="chatForm" class="input-box">
-            <label for="fileInput" class="icon-btn" title="صور وكاميرا">
-                <i class="fas fa-camera"></i>
-            </label>
-            <input type="file" id="fileInput" accept="image/*" capture="environment">
+            <label for="cameraInput" class="action-icon"><i class="fas fa-camera"></i></label>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment">
             
-            <img id="imgPreview" class="img-preview">
+            <label for="galleryInput" class="action-icon"><i class="fas fa-image"></i></label>
+            <input type="file" id="galleryInput" accept="image/*">
             
-            <input type="text" id="userInput" placeholder="اسأل درش أو اطلب صورة..." autocomplete="off">
-            
-            <button type="submit" class="send-btn">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+            <img id="imgPreview" class="preview-box">
+            <input type="text" id="textInput" placeholder="اسأل درش..." autocomplete="off">
+            <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
         </form>
     </div>
 
     <script>
-        const fileInput = document.getElementById('fileInput');
+        const chatBox = document.getElementById('chatBox');
         const imgPreview = document.getElementById('imgPreview');
-        const form = document.getElementById('chatForm');
-        const box = document.getElementById('chatBox');
-        let selectedImg = null;
+        let currentImg = null;
 
-        fileInput.onchange = (e) => {
+        const handleFile = (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    selectedImg = ev.target.result;
-                    imgPreview.src = selectedImg;
+                    currentImg = ev.target.result;
+                    imgPreview.src = currentImg;
                     imgPreview.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
         };
+        document.getElementById('cameraInput').onchange = handleFile;
+        document.getElementById('galleryInput').onchange = handleFile;
 
-        // وظيفة الكتابة المستمرة (Streaming)
-        async function typeWriter(element, text, imageUrl) {
+        async function typeMessage(element, text, imgUrl) {
+            element.classList.add('writing');
             let i = 0;
-            element.innerHTML = '<span class="cursor"></span>';
-            
+            element.innerText = "";
             const interval = setInterval(() => {
                 if (i < text.length) {
-                    element.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
+                    element.innerText += text.charAt(i);
                     i++;
-                    box.scrollTop = box.scrollHeight; // التمرير التلقائي أثناء الكتابة
+                    chatBox.scrollTop = chatBox.scrollHeight;
                 } else {
                     clearInterval(interval);
-                    element.innerHTML = text; // إزالة المؤشر عند الانتهاء
-                    if(imageUrl) {
-                        element.innerHTML += `<br><img src="${imageUrl}">`;
+                    element.classList.remove('writing');
+                    if(imgUrl) {
+                        element.innerHTML += `<br><img src="${imgUrl}" class="ai-img">`;
+                        chatBox.scrollTop = chatBox.scrollHeight;
                     }
-                    box.scrollTop = box.scrollHeight;
                 }
-            }, 30); // سرعة الكتابة
+            }, 25);
         }
 
-        form.onsubmit = async (e) => {
+        document.getElementById('chatForm').onsubmit = async (e) => {
             e.preventDefault();
-            const q = document.getElementById('userInput').value.trim();
-            if(!q && !selectedImg) return;
+            const val = document.getElementById('textInput').value.trim();
+            if(!val && !currentImg) return;
 
-            // رسالة المستخدم
             const uDiv = document.createElement('div');
             uDiv.className = 'bubble user';
-            uDiv.innerText = q;
-            if(selectedImg) uDiv.innerHTML += `<br><img src="${selectedImg}" style="width:100px; border-radius:10px; margin-top:5px">`;
-            box.appendChild(uDiv);
+            uDiv.innerText = val;
+            if(currentImg) uDiv.innerHTML += `<br><img src="${currentImg}" style="width:80px;border-radius:8px;margin-top:5px">`;
+            chatBox.appendChild(uDiv);
             
-            document.getElementById('userInput').value = '';
+            document.getElementById('textInput').value = '';
             imgPreview.style.display = 'none';
-            const tempImg = selectedImg;
-            selectedImg = null;
-            box.scrollTop = box.scrollHeight;
+            const sentImg = currentImg;
+            currentImg = null;
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-            // فقاعة الـ AI
             const aiDiv = document.createElement('div');
-            aiDiv.className = 'ai bubble';
-            aiDiv.innerHTML = "درش بيفكر...";
-            box.appendChild(aiDiv);
+            aiDiv.className = 'bubble ai';
+            aiDiv.innerText = "درش بيفكر...";
+            chatBox.appendChild(aiDiv);
 
             try {
                 const r = await fetch('/ask', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ query: q, image: tempImg })
+                    body: JSON.stringify({ query: val, image: sentImg })
                 });
                 const d = await r.json();
-                await typeWriter(aiDiv, d.answer, d.image);
-            } catch {
-                aiDiv.innerText = "حصل مشكلة بسيطة، جرب تاني يا درش!";
-            }
+                await typeMessage(aiDiv, d.answer, d.image);
+            } catch { aiDiv.innerText = "السيرفر مشغول، جرب تاني يا مصطفى!"; }
         };
     </script>
 </body>
