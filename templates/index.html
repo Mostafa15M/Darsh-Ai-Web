@@ -3,46 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Darsh Research | AI</title>
+    <title>Darsh AI | الشات الذكي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@600&display=swap" rel="stylesheet">
     <style>
-        body { background: #0b0f1a; color: white; font-family: 'Cairo', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .chat-scroll { flex: 1; overflow-y: auto; padding: 20px 15px 150px 15px; scroll-behavior: smooth; }
-        .bubble { max-width: 85%; margin-bottom: 15px; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.5; }
+        body { background: #0b0f1a; color: white; font-family: 'Cairo', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        .chat-scroll { flex: 1; overflow-y: auto; padding: 20px 15px 120px 15px; }
+        .bubble { max-width: 85%; margin-bottom: 15px; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.6; }
         .user { background: #2563eb; margin-right: auto; border-bottom-right-radius: 2px; }
         .ai { background: #1e293b; border: 1px solid #334155; margin-left: auto; border-bottom-left-radius: 2px; }
         
-        /* صندوق البحث المرفوع عشان الموبايل */
-        .bottom-container { position: fixed; bottom: 25px; left: 0; right: 0; padding: 0 15px; z-index: 999; }
-        .input-wrapper { background: #1e293b; border: 1px solid #3b82f6; border-radius: 20px; display: flex; align-items: center; padding: 5px 10px; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-size: 14px; }
-        button { background: #2563eb; padding: 10px 20px; border-radius: 15px; font-weight: bold; }
+        /* صندوق البحث الثابت والمرفوع */
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0b0f1a; padding: 15px; padding-bottom: 30px; }
+        .input-group { background: #1e293b; border: 1px solid #3b82f6; border-radius: 25px; display: flex; overflow: hidden; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 12px 20px; outline: none; }
+        button { background: #2563eb; padding: 0 25px; font-weight: bold; transition: 0.3s; }
+        button:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
-    <header class="p-4 text-center bg-[#0b0f1a] shadow-md">
-        <h1 style="font-family:'Orbitron'" class="text-lg text-blue-500">DARSH RESEARCH</h1>
+    <header class="p-4 text-center border-b border-white/5">
+        <h1 style="font-family:'Orbitron'" class="text-xl text-blue-500">DARSH AI</h1>
     </header>
 
     <div id="chatBox" class="chat-scroll">
-        <div class="ai bubble">أهلاً يا مصطفى! جرب تسألني "ما هي فوائد البنجر؟" أو أي سؤال حقيقي وشوف النتيجة.</div>
+        <div class="ai bubble">أهلاً يا مصطفى! أنا دلوقتي بقيت أذكى بكتير.. جرب تسألني أي حاجة وهرد عليك فوراً.</div>
     </div>
 
-    <div class="bottom-container">
-        <form id="searchForm" class="input-wrapper shadow-2xl">
+    <div class="bottom-bar">
+        <form id="chatForm" class="input-group shadow-2xl">
             <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
-            <button type="submit">بحث</button>
+            <button type="submit">إرسال</button>
         </form>
     </div>
 
     <script>
-        const form = document.getElementById('searchForm');
+        const form = document.getElementById('chatForm');
         const box = document.getElementById('chatBox');
         const input = document.getElementById('userInput');
 
-        // ميزة الكتابة حرف بحرف
-        function streamText(element, text) {
+        // ميزة الكتابة المتدرجة (ChatGPT Style)
+        function typeEffect(element, text) {
             let i = 0;
             element.innerHTML = "";
             const interval = setInterval(() => {
@@ -53,7 +54,7 @@
                 } else {
                     clearInterval(interval);
                 }
-            }, 30);
+            }, 25);
         }
 
         form.onsubmit = async (e) => {
@@ -65,10 +66,10 @@
             input.value = '';
             box.scrollTop = box.scrollHeight;
 
-            const tempAi = document.createElement('div');
-            tempAi.className = 'ai bubble';
-            tempAi.innerHTML = "...جاري البحث";
-            box.appendChild(tempAi);
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'ai bubble';
+            aiMsg.innerHTML = "جاري التفكير...";
+            box.appendChild(aiMsg);
 
             try {
                 const r = await fetch('/ask', {
@@ -77,9 +78,9 @@
                     body: JSON.stringify({query: q})
                 });
                 const d = await r.json();
-                streamText(tempAi, d.answer);
+                typeEffect(aiMsg, d.answer);
             } catch {
-                tempAi.innerHTML = "السيرفر وقع، جرب تاني.";
+                aiMsg.innerHTML = "فيه مشكلة فنية، جرب تاني يا درش.";
             }
         };
     </script>
