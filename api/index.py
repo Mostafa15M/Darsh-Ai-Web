@@ -10,18 +10,20 @@ class DarshSearch:
             "origin": "https://contvia.com",
             "referer": "https://contvia.com/",
             "accept": "application/json",
-            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36"
+            "user-agent": "Mozilla/5.0 (Linux; Android 10)"
         }
 
     def search(self, query):
         try:
-            params = {"q": query, "max_results": 10}
-            res = requests.get(self.api_url, params=params, headers=self.headers, timeout=20)
+            params = {"q": query, "max_results": 15}
+            res = requests.get(self.api_url, params=params, headers=self.headers, timeout=25)
             if res.status_code == 200:
-                return res.json()
-            return {"error": "سيرفر البحث لا يستجيب حالياً"}
-        except Exception as e:
-            return {"error": str(e)}
+                data = res.json()
+                # فلترة الرد عشان ناخد الخلاصة بس
+                return data.get('answer') or data.get('result') or "للأسف ملقيتش إجابة دقيقة للسؤال ده، جرب تسأل بطريقة تانية."
+            return "السيرفر مشغول حالياً، جرب كمان شوية يا درش."
+        except:
+            return "حصل مشكلة في الاتصال، اتأكد من النت عندك."
 
 engine = DarshSearch()
 
@@ -33,9 +35,9 @@ def index():
 def ask():
     user_query = request.json.get('query')
     if not user_query:
-        return jsonify({"error": "الرجاء إدخال سؤال"})
+        return jsonify({"answer": "لازم تكتب سؤال عشان أقدر أبحث لك!"})
     
-    result = engine.search(user_query)
-    return jsonify(result)
+    response_text = engine.search(user_query)
+    return jsonify({"answer": response_text})
 
 app = app
