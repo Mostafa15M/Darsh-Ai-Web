@@ -5,111 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Darsh AI | البحث الذكي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #020617; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
-        #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-        .cyber-glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.2); }
-        .darsh-title {
-            font-family: 'Orbitron', sans-serif; font-size: clamp(1.5rem, 5vw, 3rem);
-            background: linear-gradient(90deg, #60a5fa, #a78bfa, #3b82f6);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        body { background: #050a18; color: #e2e8f0; font-family: 'Cairo', sans-serif; overflow: hidden; }
+        #stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .chat-container { height: calc(100vh - 220px); overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
         
-        /* تصميم صندوق الشات */
-        #chatBox { height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #3b82f6 transparent; }
-        .user-msg { background: rgba(59, 130, 246, 0.1); border-right: 3px solid #3b82f6; padding: 12px; margin: 8px 0; border-radius: 8px; }
-        .ai-msg { background: rgba(167, 139, 250, 0.05); border-right: 3px solid #a78bfa; padding: 12px; margin: 8px 0; border-radius: 8px; }
+        /* تصميم الفقاعات */
+        .msg { max-width: 85%; margin-bottom: 15px; padding: 12px 18px; border-radius: 18px; font-size: 0.95rem; line-height: 1.6; position: relative; }
+        .user-msg { background: #2563eb; color: white; margin-right: auto; border-bottom-right-radius: 4px; }
+        .ai-msg { background: #1e293b; border: 1px solid #334155; margin-left: auto; border-bottom-left-radius: 4px; }
 
-        /* اللودر الدوار المفضل */
-        .orbit-spinner { width: 40px; height: 40px; perspective: 800px; margin: 10px auto; }
-        .orbit { position: absolute; width: 100%; height: 100%; border-radius: 50%; }
-        .orbit:nth-child(1) { border-bottom: 2px solid #60a5fa; animation: r1 1s linear infinite; }
-        .orbit:nth-child(2) { border-right: 2px solid #a78bfa; animation: r2 1s linear infinite; }
-        @keyframes r1 { 0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); } 100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } }
-        @keyframes r2 { 0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); } 100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); } }
+        /* اللودر الدوار */
+        .loader-orbit { width: 30px; height: 30px; position: relative; perspective: 800px; margin: 10px auto; }
+        .orbit { position: absolute; width: 100%; height: 100%; border-radius: 50%; border-bottom: 2px solid #60a5fa; animation: rot 1s linear infinite; }
+        @keyframes rot { from { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); } to { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <canvas id="starfield"></canvas>
+<body class="flex flex-col min-h-screen">
+    <canvas id="stars"></canvas>
 
-    <div class="cyber-glass w-full max-w-2xl p-6 sm:p-10 rounded-[2.5rem] z-10">
-        <header class="text-center mb-6">
-            <h1 class="darsh-title uppercase tracking-widest">DARSH AI RESEARCH</h1>
-            <p class="text-[9px] tracking-[0.4em] text-blue-400 mt-1">INTELLIGENT SEARCH ENGINE</p>
+    <div class="max-w-3xl w-full mx-auto flex-1 flex flex-col p-4">
+        <header class="text-center py-6">
+            <h1 style="font-family:'Orbitron'" class="text-2xl font-bold tracking-tighter text-blue-500">DARSH AI</h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">Neural Research Engine</p>
         </header>
 
-        <div id="chatBox" class="mb-6 px-2">
-            <div class="ai-msg">أهلاً بك يا درش! أنا أداة البحث الذكية، اسألني عن أي شيء وسأقوم بالبحث والتحليل لك.</div>
-        </div>
+        <div class="glass-panel rounded-3xl flex-1 flex flex-col overflow-hidden shadow-2xl">
+            <div id="chatBox" class="chat-container">
+                <div class="ai-msg msg shadow-sm">أهلاً يا مصطفى! أنا جاهز للبحث.. اسألني عن أي حاجة وهجيب لك الخلاصة.</div>
+            </div>
 
-        <div id="loading" class="hidden">
-            <div class="orbit-spinner"><div class="orbit"></div><div class="orbit"></div></div>
-        </div>
+            <div id="loading" class="hidden"><div class="loader-orbit"><div class="orbit"></div></div></div>
 
-        <form id="searchForm" class="relative">
-            <input type="text" id="queryInput" placeholder="ما الذي تريد البحث عنه؟" 
-                class="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-blue-500 transition-all shadow-inner">
-            <button type="submit" class="absolute left-3 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 px-6 rounded-xl font-bold text-xs transition-all">بحث</button>
-        </form>
+            <div class="p-4 bg-slate-900/50">
+                <form id="chatForm" class="flex gap-2">
+                    <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." 
+                        class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-sm">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20">إرسال</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
         // كود النجوم
-        const canvas = document.getElementById('starfield');
+        const canvas = document.getElementById('stars');
         const ctx = canvas.getContext('2d');
-        let stars = [];
-        function init() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            stars = [];
-            for(let i=0; i<70; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1, sp:Math.random()*0.05});
-        }
-        function draw() {
-            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='white';
-            stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x,s.y,s.s,0,Math.PI*2); ctx.fill(); s.y+=s.sp; if(s.y>canvas.height) s.y=0; });
-            requestAnimationFrame(draw);
-        }
+        let s=[]; function init(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; s=[]; for(let i=0;i<60;i++)s.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,sp:Math.random()*0.05+0.01}); }
+        function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#fff'; s.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,0.8,0,Math.PI*2); ctx.fill(); p.y+=p.sp; if(p.y>canvas.height)p.y=0; }); requestAnimationFrame(draw); }
         init(); draw();
 
-        const chatBox = document.getElementById('chatBox');
-        const form = document.getElementById('searchForm');
-        const loader = document.getElementById('loading');
+        const form = document.getElementById('chatForm');
+        const box = document.getElementById('chatBox');
+        const load = document.getElementById('loading');
 
         form.onsubmit = async (e) => {
             e.preventDefault();
-            const query = document.getElementById('queryInput').value;
-            if(!query) return;
+            const q = document.getElementById('userInput').value;
+            if(!q) return;
 
-            // إضافة رسالة المستخدم
-            chatBox.innerHTML += `<div class="user-msg">${query}</div>`;
-            document.getElementById('queryInput').value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            loader.classList.remove('hidden');
+            box.innerHTML += `<div class="user-msg msg shadow-md">${q}</div>`;
+            document.getElementById('userInput').value = '';
+            box.scrollTop = box.scrollHeight;
+            load.classList.remove('hidden');
 
             try {
-                const response = await fetch('/ask', {
+                const r = await fetch('/ask', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: q})
                 });
-                const data = await response.json();
-                
-                loader.classList.add('hidden');
-
-                if(data.answer) {
-                    chatBox.innerHTML += `<div class="ai-msg">${data.answer}</div>`;
-                } else if(data.error) {
-                    chatBox.innerHTML += `<div class="ai-msg text-red-400">${data.error}</div>`;
-                } else {
-                    // إذا كان الـ API يرجع نتائج بحث خام
-                    chatBox.innerHTML += `<div class="ai-msg">تم العثور على نتائج، جاري تحليلها...</div>`;
-                }
+                const d = await r.json();
+                load.classList.add('hidden');
+                box.innerHTML += `<div class="ai-msg msg shadow-sm">${d.answer}</div>`;
             } catch {
-                loader.classList.add('hidden');
-                chatBox.innerHTML += `<div class="ai-msg text-red-400">عذراً، حدث خطأ في الاتصال بالسيرفر.</div>`;
+                load.classList.add('hidden');
+                box.innerHTML += `<div class="ai-msg msg text-red-400">حصل خطأ في الاتصال بالسيرفر.</div>`;
             }
-            chatBox.scrollTop = chatBox.scrollHeight;
+            box.scrollTop = box.scrollHeight;
         };
     </script>
 </body>
