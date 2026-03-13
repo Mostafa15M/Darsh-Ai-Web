@@ -15,17 +15,15 @@ class DarshSearch:
 
     def search(self, query):
         try:
-            # زيادة وقت الانتظار لـ 30 ثانية عشان نلحق الرد
+            # تقليل max_results لضمان سرعة الرد قبل الـ timeout
             params = {"q": query, "max_results": 5}
-            res = requests.get(self.api_url, params=params, headers=self.headers, timeout=30)
+            res = requests.get(self.api_url, params=params, headers=self.headers, timeout=25)
             if res.status_code == 200:
                 data = res.json()
-                # محاولة استخراج الإجابة بأكثر من طريقة
-                ans = data.get('answer') or data.get('result')
-                if ans: return ans
-            return "دقيقة واحدة يا درش، بحاول أجمع لك أدق معلومات..."
+                return data.get('answer') or data.get('result') or "ملقتش إجابة كافية، اسألني حاجة تانية يا درش."
+            return "السيرفر عليه ضغط، جرب كمان ثواني."
         except:
-            return "السيرفر عليه ضغط حالياً، بس أنا معاك.. اسأل تاني."
+            return "حصل مشكلة في الاتصال، جرب تاني يا بطل."
 
 engine = DarshSearch()
 
@@ -35,7 +33,6 @@ def index(): return render_template('index.html')
 @app.route('/ask', methods=['POST'])
 def ask():
     q = request.json.get('query')
-    if not q: return jsonify({"answer": "اكتب أي حاجة في بالك!"})
     return jsonify({"answer": engine.search(q)})
 
 app = app
