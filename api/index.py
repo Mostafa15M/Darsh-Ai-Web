@@ -3,8 +3,7 @@ import requests
 
 app = Flask(__name__, template_folder='../templates')
 
-# تعليمات "درش" الثابتة
-SYSTEM_PROMPT = "أنت ذكاء اصطناعي اسمك 'درش'. مطورك وصانعك هو المبدع مصطفى منصور Darsh Egypt. رد دايماً باللهجة المصرية وخليك شاطر ومرح."
+SYSTEM_PROMPT = "أنت 'درش'، ذكاء اصطناعي مطوره مصطفى منصور. رد دايماً بالمصري وخليك ذكي وسريع."
 
 @app.route('/')
 def index():
@@ -14,29 +13,16 @@ def index():
 def ask():
     data = request.json
     user_m = data.get('query', '').strip()
-    image_data = data.get('image') # الصورة اللي المستخدم رفعها
+    image_data = data.get('image')
 
-    # 1. نظام توليد الصور (لو المستخدم طلب رسم)
-    if any(word in user_m.lower() for word in ["ارسم", "صورة", "image", "draw", "صمم"]):
-        img_url = f"https://pollinations.ai/p/{user_m}?width=1024&height=1024&model=flux&seed=42"
-        return jsonify({
-            "answer": "من عيوني يا درش! دي الصورة اللي تخيلتها ليك:",
-            "image": img_url
-        })
+    # توليد الصور
+    if any(word in user_m.lower() for word in ["ارسم", "صورة", "image"]):
+        img_url = f"https://pollinations.ai/p/{user_m}?width=1024&height=1024&model=flux"
+        return jsonify({"answer": "من عيوني! دي الصورة اللي طلبتها:", "image": img_url})
 
-    # 2. نظام الدردشة وتحليل الصور (Vision) المجاني
     try:
-        # بنبعت الطلب لمحرك يدعم النصوص والصور مع بعض
-        payload = {
-            "messages": [{"role": "user", "content": user_m}],
-            "system": SYSTEM_PROMPT,
-            "image": image_data if image_data else None,
-            "model": "openai" # السيرفر هيختار أفضل موديل مجاني متاح
-        }
-        
-        response = requests.post("https://text.pollinations.ai/", json=payload, timeout=20)
+        # استخدام موديل سريع ومستقر
+        response = requests.get(f"https://text.pollinations.ai/{user_m}?system={SYSTEM_PROMPT}", timeout=15)
         return jsonify({"answer": response.text})
     except:
-        return jsonify({"answer": "حصل ضغط على السيرفر المجاني، جرب تسألني تاني يا بطل!"})
-
-app = app
+        return jsonify({"answer": "السيرفر مضغوط شوية، ابعت رسالتك تاني حالا يا بطل!"})
