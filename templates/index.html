@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Darsh AI | Vercel Edition</title>
+    <title>Darsh AI | Next Gen</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background: #020617; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
         #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-        .cyber-glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .cyber-glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); }
         .darsh-title {
-            font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 8vw, 4rem);
+            font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 8vw, 4.5rem);
             background: linear-gradient(90deg, #60a5fa, #a78bfa, #3b82f6);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        /* شكل التحميل القديم (الكرتين) */
+
+        /* اللودر القديم اللي طلبته */
         .orbit-spinner { width: 60px; height: 60px; perspective: 800px; margin: 0 auto; position: relative; }
         .orbit { position: absolute; width: 100%; height: 100%; border-radius: 50%; }
         .orbit:nth-child(1) { border-bottom: 3px solid #60a5fa; animation: r1 1s linear infinite; }
@@ -26,54 +27,58 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <canvas id="starfield"></canvas>
-    <div class="cyber-glass w-full max-w-xl p-8 rounded-[2rem] z-10 text-center">
-        <h1 class="darsh-title mb-6">DARSH AI</h1>
+    
+    <div class="cyber-glass w-full max-w-xl p-8 rounded-[2.5rem] z-10 text-center">
+        <h1 class="darsh-title mb-8">DARSH AI</h1>
 
-        <form id="mainForm" class="space-y-4">
-            <input type="file" id="imageInput" accept="image/*" class="w-full bg-black/40 p-3 rounded-xl text-xs border border-white/10" required>
-            <textarea id="promptInput" rows="2" placeholder="أدخل وصف الحركة..." class="w-full bg-black/40 rounded-xl p-4 text-sm focus:outline-none border border-white/10" required></textarea>
-            <select id="modelSelect" class="w-full bg-black/40 p-3 rounded-xl text-sm border border-white/10">
-                <option value="3-38">Seedance 1.5 Pro</option>
-                <option value="3-11">Google Veo 3.1</option>
-                <option value="3-33">Kling 2.6</option>
-            </select>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-xl transition-all">إنشاء الفيديو ✨</button>
+        <form id="mainForm" class="space-y-6">
+            <input type="file" id="imageInput" accept="image/*" class="w-full bg-black/40 p-4 rounded-xl text-xs border border-white/10" required>
+            <textarea id="promptInput" rows="2" placeholder="أدخل نص الحركة (Prompt)..." class="w-full bg-black/40 rounded-xl p-4 text-sm focus:outline-none border border-white/10" required></textarea>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <select id="modelSelect" class="w-full bg-black/40 p-4 rounded-xl text-sm border border-white/10">
+                    <option value="3-38">Seedance 1.5 Pro</option>
+                    <option value="3-11">Google Veo 3.1</option>
+                    <option value="3-33">Kling 2.6</option>
+                </select>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-xl transition-all">إنشاء السحر ✨</button>
+            </div>
         </form>
 
-        <div id="loader" class="hidden py-10">
+        <div id="loader" class="hidden py-12">
             <div class="orbit-spinner mb-6"><div class="orbit"></div><div class="orbit"></div></div>
-            <p id="statusMsg" class="text-xs tracking-widest text-blue-300 animate-pulse">جاري الاتصال بالسيرفر...</p>
+            <p id="statusMsg" class="text-xs tracking-widest text-blue-300 animate-pulse uppercase">Initializing Neural Link...</p>
         </div>
 
-        <div id="resultArea" class="hidden mt-6 space-y-4">
-            <video id="videoOutput" controls class="w-full rounded-2xl border border-white/10 shadow-2xl"></video>
-            <div class="flex gap-2">
-                <a id="downloadBtn" download="video.mp4" target="_blank" class="flex-1 bg-green-600 py-3 rounded-xl text-sm font-bold">تحميل الفيديو ⬇️</a>
-                <button onclick="location.reload()" class="flex-1 bg-white/10 py-3 rounded-xl text-sm">مرة أخرى</button>
+        <div id="resultArea" class="hidden mt-8 space-y-4">
+            <video id="videoOutput" controls class="w-full rounded-3xl border border-white/10 shadow-2xl"></video>
+            <div class="flex gap-3">
+                <a id="downloadBtn" download="darsh_ai.mp4" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 py-4 rounded-xl text-sm font-bold">تحميل الفيديو ⬇️</a>
+                <button onclick="location.reload()" class="flex-1 bg-white/10 hover:bg-white/20 py-4 rounded-xl text-sm">محاولة أخرى</button>
             </div>
         </div>
     </div>
 
     <script>
-        // كود النجوم الخفيف والهادئ
+        // كود النجوم الخفيف (80 نجمة فقط وحركة بطيئة جداً)
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
         let stars = [];
         function init() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             stars = [];
-            for(let i=0; i<60; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1, sp:Math.random()*0.04});
+            for(let i=0; i<80; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1, sp:Math.random()*0.05});
         }
         function draw() {
-            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='white';
+            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='rgba(255,255,255,0.7)';
             stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x,s.y,s.s,0,Math.PI*2); ctx.fill(); s.y+=s.sp; if(s.y>canvas.height) s.y=0; });
             requestAnimationFrame(draw);
         }
-        init(); draw();
+        init(); draw(); window.addEventListener('resize', init);
 
         const form = document.getElementById('mainForm');
         const statusMsg = document.getElementById('statusMsg');
-        const msgs = ["DREAMING FRAMES...", "AI IS PROCESSING...", "RENDERING ART...", "ALMOST THERE..."];
+        const msgs = ["SYNTHESIZING FLOW...", "AI IS PROCESSING...", "RENDERING ART...", "FINALIZING PIXELS..."];
 
         form.onsubmit = async (e) => {
             e.preventDefault();
